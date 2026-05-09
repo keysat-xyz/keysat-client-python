@@ -51,10 +51,56 @@ class ValidateOptions:
 
 @dataclass
 class StartPurchaseOptions:
+    """Optional extras for :meth:`Client.start_purchase`.
+
+    All fields are optional. To buy a specific tier, set
+    ``policy_slug`` to one of the slugs returned by
+    :meth:`Client.list_public_policies`. When omitted, the
+    licensing service falls back to the product's default policy.
+    """
+
     buyer_email: str | None = None
     buyer_note: str | None = None
     redirect_url: str | None = None
     code: str | None = None
+    policy_slug: str | None = None
+
+
+@dataclass
+class PublicPolicy:
+    """One tier returned by :meth:`Client.list_public_policies`.
+
+    Mirrors what the licensing service's ``/buy/<slug>`` page reads
+    server-side, so an in-app tier picker can render identical text
+    and pricing.
+    """
+
+    slug: str
+    name: str
+    description: str
+    price_sats: int
+    duration_seconds: int
+    max_machines: int
+    is_trial: bool
+    entitlements: list[str]
+    highlighted: bool
+    is_recurring: bool
+    renewal_period_days: int
+    trial_days: int
+
+
+@dataclass
+class PublicPoliciesProduct:
+    slug: str
+    name: str
+    description: str
+    base_price_sats: int
+
+
+@dataclass
+class PublicPoliciesResponse:
+    product: PublicPoliciesProduct
+    policies: list[PublicPolicy]
 
 
 @dataclass
@@ -205,6 +251,7 @@ class Client:
             "buyer_note": merged.buyer_note,
             "redirect_url": merged.redirect_url,
             "code": merged.code,
+            "policy_slug": merged.policy_slug,
         }
         body = {k: v for k, v in body.items() if v is not None}
         raw = self._post("/v1/purchase", body)
@@ -216,6 +263,44 @@ class Client:
             base_price_sats=raw.get("base_price_sats", raw["amount_sats"]),
             discount_applied_sats=raw.get("discount_applied_sats", 0),
             poll_url=raw["poll_url"],
+        )
+
+    def list_public_policies(self, product_slug: str) -> PublicPoliciesResponse:
+        """List public, buyer-visible policies (tiers) for a product.
+
+        No auth required — same data the licensing service's
+        ``/buy/<slug>`` page reads server-side. Use this to render an
+        in-app tier picker that stays in sync with the operator's
+        admin-side tier setup. Internal fields (id, tip recipients,
+        raw metadata) are omitted by the server.
+        """
+        raw = self._get(f"/v1/products/{product_slug}/policies")
+        product = raw.get("product", {}) or {}
+        policies_raw = raw.get("policies") or []
+        return PublicPoliciesResponse(
+            product=PublicPoliciesProduct(
+                slug=product.get("slug", ""),
+                name=product.get("name", ""),
+                description=product.get("description", "") or "",
+                base_price_sats=int(product.get("base_price_sats", 0)),
+            ),
+            policies=[
+                PublicPolicy(
+                    slug=p.get("slug", ""),
+                    name=p.get("name", ""),
+                    description=p.get("description", "") or "",
+                    price_sats=int(p.get("price_sats", 0)),
+                    duration_seconds=int(p.get("duration_seconds", 0)),
+                    max_machines=int(p.get("max_machines", 1)),
+                    is_trial=bool(p.get("is_trial", False)),
+                    entitlements=list(p.get("entitlements") or []),
+                    highlighted=bool(p.get("highlighted", False)),
+                    is_recurring=bool(p.get("is_recurring", False)),
+                    renewal_period_days=int(p.get("renewal_period_days", 0)),
+                    trial_days=int(p.get("trial_days", 0)),
+                )
+                for p in policies_raw
+            ],
         )
 
     def poll_purchase(self, invoice_id: str) -> PollResponse:

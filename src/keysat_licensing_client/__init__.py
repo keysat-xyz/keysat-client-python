@@ -67,6 +67,9 @@ try:
         ValidateResponse,
         ValidateOptions,
         StartPurchaseOptions,
+        PublicPolicy,
+        PublicPoliciesProduct,
+        PublicPoliciesResponse,
         PurchaseSession,
         PollResponse,
         RedeemFreeOptions,
@@ -78,6 +81,9 @@ try:
         "ValidateResponse",
         "ValidateOptions",
         "StartPurchaseOptions",
+        "PublicPolicy",
+        "PublicPoliciesProduct",
+        "PublicPoliciesResponse",
         "PurchaseSession",
         "PollResponse",
         "RedeemFreeOptions",
@@ -87,4 +93,4 @@ except ImportError:
     # httpx not installed — that's fine, online client is optional.
     pass
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
