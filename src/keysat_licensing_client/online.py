@@ -90,11 +90,26 @@ class PublicPolicy:
 
 
 @dataclass
+class EntitlementDef:
+    """One entry in a product's entitlements catalog (Keysat
+    migration 0014). Operator declares the closed list once per
+    product; policies pick from this list. Use ``name`` as the
+    human-readable label when rendering an in-app tier picker
+    (e.g. "AI summaries" instead of the raw ``ai_summaries`` slug).
+    """
+
+    slug: str
+    name: str
+    description: str
+
+
+@dataclass
 class PublicPoliciesProduct:
     slug: str
     name: str
     description: str
     base_price_sats: int
+    entitlements_catalog: list[EntitlementDef]
 
 
 @dataclass
@@ -277,12 +292,21 @@ class Client:
         raw = self._get(f"/v1/products/{product_slug}/policies")
         product = raw.get("product", {}) or {}
         policies_raw = raw.get("policies") or []
+        catalog_raw = product.get("entitlements_catalog") or []
         return PublicPoliciesResponse(
             product=PublicPoliciesProduct(
                 slug=product.get("slug", ""),
                 name=product.get("name", ""),
                 description=product.get("description", "") or "",
                 base_price_sats=int(product.get("base_price_sats", 0)),
+                entitlements_catalog=[
+                    EntitlementDef(
+                        slug=c.get("slug", ""),
+                        name=c.get("name", "") or c.get("slug", ""),
+                        description=c.get("description", "") or "",
+                    )
+                    for c in catalog_raw
+                ],
             ),
             policies=[
                 PublicPolicy(
