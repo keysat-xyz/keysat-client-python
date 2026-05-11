@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "keysat-licensing-client"
 version = "0.3.0"
-description = "Python client for Keysat — a self-hosted Bitcoin-paid software licensing server that runs on Start9. Verifies signed license keys offline and wraps the HTTP API for purchase, redemption, and revocation checks."
+description = "Python client for Keysat — a Bitcoin-native self-hosted software licensing service that runs on Start9. Verifies signed license keys offline and wraps the HTTP API for purchase, redemption, and revocation checks."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT OR Apache-2.0" }

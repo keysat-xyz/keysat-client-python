@@ -1,7 +1,7 @@
 # keysat-licensing-client (Python)
 
 Python client for [Keysat](https://github.com/keysat-xyz/keysat) — a
-self-hosted Bitcoin-paid software licensing server that runs on Start9.
+Bitcoin-native self-hosted software licensing service that runs on Start9.
 
 Verifies signed license keys offline using the issuer's public key, and
 (optionally) wraps the HTTP API for live validation, purchase, and
