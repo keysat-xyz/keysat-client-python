@@ -67,6 +67,35 @@ license_key = client.wait_for_license(session.invoice_id)
 # Save license_key wherever you decided to store keys (config dir, keychain, env).
 ```
 
+To buy a specific tier, set `StartPurchaseOptions(policy_slug=...)` to a
+slug from `list_public_policies` (below); omit it to use the product's
+default policy.
+
+## Tier picker (public policies)
+
+List the buyer-visible tiers for a product — same data the server's
+`/buy/<slug>` page reads, so an in-app picker stays in sync with the
+operator's admin setup. No auth required.
+
+```python
+tiers = client.list_public_policies("my-product")
+for p in tiers.policies:
+    print(p.slug, p.name, p.price_sats, "sats", p.max_machines, "seats")
+# tiers.product.entitlements_catalog maps entitlement slugs -> human labels.
+```
+
+## Machine seat management
+
+For seat-limited licenses (`max_machines > 1`), claim and release seats by
+fingerprint. Each returns a `MachineResponse` (`ok`, `reason`,
+`active_count`, `max_machines`).
+
+```python
+client.activate(key, fingerprint, hostname="bob-laptop", platform="macos")
+client.heartbeat(key, fingerprint)   # call periodically to keep the seat live
+client.deactivate(key, fingerprint)  # release the seat
+```
+
 ## Free-license code redemption
 
 For codes the seller created with kind `free_license` (no payment):
