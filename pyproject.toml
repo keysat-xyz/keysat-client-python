@@ -38,7 +38,7 @@ dev = [
 [project.urls]
 Homepage = "https://keysat.xyz"
 Repository = "https://github.com/keysat-xyz/keysat"
-Documentation = "https://github.com/keysat-xyz/keysat/blob/main/docs/INTEGRATION.md"
+Documentation = "https://github.com/keysat-xyz/keysat/blob/main/KEYSAT_INTEGRATION.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

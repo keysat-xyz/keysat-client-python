@@ -25,6 +25,7 @@ ISSUER_PUBKEY_PEM = open("assets/issuer.pub").read()  # bake this into your app
 verifier = Verifier(PublicKey.from_pem(ISSUER_PUBKEY_PEM))
 
 ok = verifier.verify(key_from_user)  # raises LicensingError on bad sig
+# ok.expires_at is a unix timestamp; 0 = perpetual
 print(f"licensed for product {ok.product_id}, expires {ok.expires_at}")
 ```
 
@@ -93,7 +94,7 @@ replayed against someone else's licensing server:
 
 ```python
 fp_input = f"{APP_NAME}|{machine_id}"
-# The SDK SHA-256s this for you when you pass it to validate(...).
+# Pass this raw string to validate(...); the server SHA-256s it before storing.
 ```
 
 ## License
