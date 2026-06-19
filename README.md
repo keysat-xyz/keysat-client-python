@@ -19,12 +19,16 @@ Requires Python 3.10+.
 ## Five-line offline check
 
 ```python
+import time
 from keysat_licensing_client import Verifier, PublicKey
 
 ISSUER_PUBKEY_PEM = open("assets/issuer.pub").read()  # bake this into your app
 verifier = Verifier(PublicKey.from_pem(ISSUER_PUBKEY_PEM))
 
-ok = verifier.verify(key_from_user)  # raises LicensingError on bad sig
+# verify_with_time checks the signature AND rejects an expired key in one
+# call (perpetual keys, expires_at == 0, never expire). Use verify() if
+# you'd rather inspect an expired key than reject it.
+ok = verifier.verify_with_time(key_from_user, int(time.time()))  # raises kind="expired" if past expiry
 # ok.expires_at is a unix timestamp; 0 = perpetual
 print(f"licensed for product {ok.product_id}, expires {ok.expires_at}")
 ```

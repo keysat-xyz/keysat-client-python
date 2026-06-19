@@ -119,6 +119,18 @@ def test_v2_expiry_boundary(vectors: dict) -> None:
     assert is_expired_at(parsed.payload, expires_at - 1) is False
 
 
+def test_v2_verify_with_time_rejects_expired(verifier: Verifier, vectors: dict) -> None:
+    key = vectors["v2"]["licenseKey"]
+    expires_at = vectors["v2"]["expected"]["expiresAt"]
+    # At/after expiry the signed-but-expired key must be rejected...
+    with pytest.raises(LicensingError) as excinfo:
+        verifier.verify_with_time(key, expires_at)
+    assert excinfo.value.kind == "expired"
+    # ...but one second earlier it's still valid.
+    ok = verifier.verify_with_time(key, expires_at - 1)
+    assert str(ok.product_id) == vectors["v2"]["expected"]["productUuid"]
+
+
 def test_v2_entitlements(vectors: dict) -> None:
     parsed = parse_license_key(vectors["v2"]["licenseKey"])
     for slug in vectors["v2"]["expected"]["entitlements"]:
@@ -145,6 +157,14 @@ def test_v2_perpetual_unbound_verifies(verifier: Verifier, vectors: dict) -> Non
     if "v2_perpetual_unbound" not in vectors:
         pytest.skip("vector.json doesn't include v2_perpetual_unbound")
     verifier.verify(vectors["v2_perpetual_unbound"]["licenseKey"])
+
+
+def test_v2_perpetual_verify_with_time_never_expires(verifier: Verifier, vectors: dict) -> None:
+    if "v2_perpetual_unbound" not in vectors:
+        pytest.skip("vector.json doesn't include v2_perpetual_unbound")
+    # A perpetual key (expires_at == 0) is accepted even far in the future.
+    ok = verifier.verify_with_time(vectors["v2_perpetual_unbound"]["licenseKey"], 4_000_000_000)
+    assert ok.expires_at == 0
 
 
 # ------------------------------------------------------------------
