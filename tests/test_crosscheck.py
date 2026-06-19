@@ -122,10 +122,11 @@ def test_v2_expiry_boundary(vectors: dict) -> None:
 def test_v2_verify_with_time_rejects_expired(verifier: Verifier, vectors: dict) -> None:
     key = vectors["v2"]["licenseKey"]
     expires_at = vectors["v2"]["expected"]["expiresAt"]
-    # At/after expiry the signed-but-expired key must be rejected...
-    with pytest.raises(LicensingError) as excinfo:
-        verifier.verify_with_time(key, expires_at)
-    assert excinfo.value.kind == "expired"
+    # At expiry and after, the signed-but-expired key must be rejected...
+    for now in (expires_at, expires_at + 3600):
+        with pytest.raises(LicensingError) as excinfo:
+            verifier.verify_with_time(key, now)
+        assert excinfo.value.kind == "expired"
     # ...but one second earlier it's still valid.
     ok = verifier.verify_with_time(key, expires_at - 1)
     assert str(ok.product_id) == vectors["v2"]["expected"]["productUuid"]
